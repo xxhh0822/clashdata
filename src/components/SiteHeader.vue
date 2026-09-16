@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Globe, Home, Search3 } from '../icons';
+import { Globe, Search3 } from '../icons';
 import { useLanguage } from '../composables/useLanguage';
 
 const router = useRouter();
 const route = useRoute();
 const query = ref(String(route.query.q || ''));
+const baseUrl = import.meta.env.BASE_URL;
 const { language, setLanguage, text } = useLanguage();
 
 function submitSearch() {
@@ -19,7 +20,7 @@ watch(() => route.query.q, (value) => { query.value = String(value || ''); });
 <template>
   <header class="site-header">
     <RouterLink class="brand" to="/" :aria-label="text('Clash Data 首页', 'Clash Data home')">
-      <span class="brand-mark"><Home :size="25" weight="Filled" aria-hidden="true" /></span>
+      <span class="brand-mark"><img :src="`${baseUrl}supercell-logo.svg`" alt="" aria-hidden="true" /></span>
       <span class="brand-copy"><strong>Clash Data</strong><small>{{ text('部落冲突数据图鉴', 'Data Encyclopedia') }}</small></span>
     </RouterLink>
 

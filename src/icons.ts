@@ -3,6 +3,7 @@ export {
   BookOpen,
   Castle,
   ChartBar,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,

@@ -12,6 +12,7 @@ import ItemCard from '../components/ItemCard.vue';
 import DataFields from '../components/DataFields.vue';
 import LoadingState from '../components/LoadingState.vue';
 import EmptyState from '../components/EmptyState.vue';
+import SelectMenu from '../components/SelectMenu.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -56,6 +57,18 @@ const scopedItems = computed(() => {
 });
 const categories = computed(() => [...new Set(scopedItems.value.map((item) => item.category))].sort());
 const requiredLevels = computed(() => [...new Set(scopedItems.value.flatMap((item) => item.requiredLevels))].sort((a, b) => a - b));
+const typeOptions = computed(() => [
+  { value: 'all', label: text('全部类型', 'All types') },
+  ...categories.value.map((category) => ({ value: category, label: categoryName(category) })),
+]);
+const levelOptions = computed(() => [
+  { value: 'all', label: text('全部等级', 'All levels') },
+  ...requiredLevels.value.map((level) => ({ value: String(level), label: `${text('等级', 'Level')} ${level}` })),
+]);
+const sortOptions = computed(() => [
+  { value: 'name', label: text('按名称', 'By name') },
+  { value: 'level', label: text('按最高等级', 'By max level') },
+]);
 const filtered = computed(() => {
   const result = scopedItems.value.filter((item) =>
     (typeFilter.value === 'all' || item.category === typeFilter.value) &&
@@ -194,9 +207,9 @@ onMounted(async () => { items.value = await loadCatalog(); loading.value = false
         <span class="result-count"><Grid :size="17" aria-hidden="true" />{{ filtered.length }}</span>
       </header>
       <div class="dashboard-filters" :aria-label="text('数据筛选', 'Data filters')">
-        <label><span>{{ text('全部类型', 'All types') }}</span><select v-model="typeFilter" @change="resetRouteSelection"><option value="all">{{ text('全部类型', 'All types') }}</option><option v-for="category in categories" :key="category" :value="category">{{ categoryName(category) }}</option></select></label>
-        <label><span>{{ text('大本营等级', 'Town Hall level') }}</span><select v-model="levelFilter" @change="resetRouteSelection"><option value="all">{{ text('全部等级', 'All levels') }}</option><option v-for="level in requiredLevels" :key="level" :value="String(level)">{{ text('等级', 'Level') }} {{ level }}</option></select></label>
-        <label class="sort-filter"><span>{{ text('排序', 'Sort') }}</span><select v-model="sort" @change="resetRouteSelection"><option value="name">{{ text('按名称', 'By name') }}</option><option value="level">{{ text('按最高等级', 'By max level') }}</option></select></label>
+        <SelectMenu v-model="typeFilter" :label="text('类型筛选', 'Filter by type')" :options="typeOptions" @change="resetRouteSelection" />
+        <SelectMenu v-model="levelFilter" class="level-filter" :label="text('大本营等级筛选', 'Filter by Town Hall level')" :options="levelOptions" @change="resetRouteSelection" />
+        <SelectMenu v-model="sort" class="sort-filter" :label="text('排序方式', 'Sort order')" :options="sortOptions" @change="resetRouteSelection" />
         <button class="clear-filter" type="button" :aria-label="text('清空筛选', 'Clear filters')" @click="clearFilters"><Refresh :size="19" /><span>{{ text('清空', 'Clear') }}</span></button>
       </div>
       <LoadingState v-if="loading" />
