@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
-import { Star } from '../icons';
 import type { CatalogItem } from '../types';
 import { assetUrl } from '../data';
 import { useLanguage } from '../composables/useLanguage';
@@ -21,7 +20,6 @@ const image = computed(() => assetUrl(props.item.thumbnail || props.item.icon));
       <img v-if="image" :src="image" :alt="name" loading="lazy" decoding="async" />
       <div v-else class="image-fallback" aria-hidden="true">{{ name.slice(0, 1) }}</div>
       <span v-if="item.maxLevel" class="level-badge">Lv. {{ item.maxLevel }}</span>
-      <span class="card-favorite" aria-hidden="true"><Star :size="18" /></span>
     </div>
     <div class="item-copy">
       <h3>{{ name }}</h3>

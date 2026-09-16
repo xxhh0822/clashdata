@@ -8,9 +8,6 @@ export {
   ChevronLeft,
   ChevronRight,
   CircleInfo,
-  Clock,
-  Coins,
-  Crosshairs,
   CloseCircle,
   Database,
   Filter,
@@ -18,7 +15,6 @@ export {
   Globe,
   Grid,
   Home,
-  Heart,
   Language,
   Medal,
   Menu,
@@ -26,5 +22,4 @@ export {
   Search3,
   Shield,
   ShieldStar,
-  Star,
 } from 'reicon-vue';

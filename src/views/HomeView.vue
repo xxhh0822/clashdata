@@ -2,14 +2,13 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router';
 import {
-  BookOpen, Castle, ChartBar, ChevronLeft, ChevronRight, CircleInfo, Clock, Coins,
-  Crosshairs, Flask, Grid, Heart, Home, Medal, Refresh, ShieldStar,
+  BookOpen, Castle, ChartBar, ChevronLeft, ChevronRight, Flask, Grid, Home, Medal,
+  Refresh, ShieldStar,
 } from '../icons';
 import { assetUrl, loadCatalog, loadEntity } from '../data';
 import type { CatalogItem, DataRecord } from '../types';
 import { useLanguage } from '../composables/useLanguage';
 import ItemCard from '../components/ItemCard.vue';
-import DataFields from '../components/DataFields.vue';
 import LoadingState from '../components/LoadingState.vue';
 import EmptyState from '../components/EmptyState.vue';
 import SelectMenu from '../components/SelectMenu.vue';
@@ -22,14 +21,13 @@ const entity = ref<DataRecord>();
 const entityLoading = ref(false);
 const entityError = ref('');
 const typeFilter = ref('all');
-const levelFilter = ref('all');
 const sort = ref('name');
 const page = ref(1);
 const selectedLevel = ref(0);
 const levelStrip = ref<HTMLElement>();
 let entityRequest = 0;
 
-const { language, translate, baseName, categoryName, fieldName, text } = useLanguage();
+const { language, translate, baseName, categoryName, text } = useLanguage();
 const sections = [
   { key: 'home', icon: Home, zh: '家乡村庄', en: 'Home Village' },
   { key: 'builder', icon: ShieldStar, zh: '建筑大师基地', en: 'Builder Base' },
@@ -56,24 +54,16 @@ const scopedItems = computed(() => {
   return items.value.filter((item) => item.base === activeBase.value && (scopeCategory.value === 'all' || item.category === scopeCategory.value));
 });
 const categories = computed(() => [...new Set(scopedItems.value.map((item) => item.category))].sort());
-const requiredLevels = computed(() => [...new Set(scopedItems.value.flatMap((item) => item.requiredLevels))].sort((a, b) => a - b));
 const typeOptions = computed(() => [
   { value: 'all', label: text('全部类型', 'All types') },
   ...categories.value.map((category) => ({ value: category, label: categoryName(category) })),
-]);
-const levelOptions = computed(() => [
-  { value: 'all', label: text('全部等级', 'All levels') },
-  ...requiredLevels.value.map((level) => ({ value: String(level), label: `${text('等级', 'Level')} ${level}` })),
 ]);
 const sortOptions = computed(() => [
   { value: 'name', label: text('按名称', 'By name') },
   { value: 'level', label: text('按最高等级', 'By max level') },
 ]);
 const filtered = computed(() => {
-  const result = scopedItems.value.filter((item) =>
-    (typeFilter.value === 'all' || item.category === typeFilter.value) &&
-    (levelFilter.value === 'all' || item.requiredLevels.includes(Number(levelFilter.value)))
-  );
+  const result = scopedItems.value.filter((item) => typeFilter.value === 'all' || item.category === typeFilter.value);
   return [...result].sort((a, b) => sort.value === 'level'
     ? (b.maxLevel || 0) - (a.maxLevel || 0)
     : (language.value === 'zh-CN' ? a.nameZh.localeCompare(b.nameZh, 'zh-CN') : a.nameEn.localeCompare(b.nameEn)));
@@ -106,40 +96,11 @@ const displayImage = computed(() => {
   return selectedItem.value?.icon ? assetUrl(selectedItem.value.icon) : '';
 });
 
-const priorityKeys = ['hitpoints', 'health', 'damagePerSecond', 'dps', 'damagePerHit', 'damagePerShot', 'damage', 'upgradeCost', 'researchCost', 'buildCost', 'upgradeCostResource', 'researchCostResource', 'buildCostResource', 'upgradeTime', 'researchTime', 'buildTime'];
-const coreStats = computed(() => {
-  const value = activeLevel.value || {};
-  const health = pick(value, ['hitpoints', 'health']);
-  const damage = pick(value, ['damagePerSecond', 'dps', 'damagePerHit', 'damagePerShot', 'damage']);
-  const cost = pick(value, ['upgradeCost', 'researchCost', 'buildCost']);
-  const resource = pick(value, ['upgradeCostResource', 'researchCostResource', 'buildCostResource']);
-  const duration = pick(value, ['upgradeTime', 'researchTime', 'buildTime']);
-  return [
-    health && { key: 'health', label: fieldName(health.key), value: formatValue(health.value), icon: Heart },
-    damage && { key: 'damage', label: fieldName(damage.key), value: formatValue(damage.value), icon: Crosshairs },
-    cost && { key: 'cost', label: fieldName(cost.key), value: `${formatValue(cost.value)}${resource ? ` ${translate(String(resource.value))}` : ''}`, icon: Coins },
-    duration && { key: 'time', label: fieldName(duration.key), value: formatValue(duration.value), icon: Clock },
-  ].filter(Boolean) as Array<{ key: string; label: string; value: string; icon: typeof Heart }>;
-});
 const panelTitle = computed(() => isSearch.value ? text(`“${query.value}”的搜索结果`, `Results for “${query.value}”`) : baseName(activeBase.value));
 const panelDescription = computed(() => isSearch.value
   ? text('匹配中文、英文名称和数据 ID', 'Matching names and data IDs')
   : text('收录全面的兵种、建筑、法术与英雄数据', 'Troops, buildings, spells and heroes in one place'));
 
-function pick(value: DataRecord, keys: string[]) {
-  for (const key of keys) if (value[key] !== undefined && value[key] !== null) return { key, value: value[key] };
-}
-function formatValue(value: unknown): string {
-  if (typeof value === 'number') return new Intl.NumberFormat(language.value === 'zh-CN' ? 'zh-CN' : 'en').format(value);
-  if (typeof value === 'string') return translate(value);
-  if (value && typeof value === 'object') {
-    const parts = Object.entries(value as DataRecord)
-      .filter(([, child]) => typeof child === 'number' && child > 0)
-      .map(([key, child]) => `${child}${fieldName(key)}`);
-    return parts.length ? parts.join(' ') : text('无需时间', 'Instant');
-  }
-  return String(value ?? '—');
-}
 function targetFor(item: CatalogItem): RouteLocationRaw {
   if (isSearch.value) return { name: 'search', query: { q: query.value, item: item.key } };
   return { name: 'detail', params: { base: activeBase.value, category: scopeCategory.value, id: item.id } };
@@ -150,16 +111,29 @@ function resetRouteSelection() {
   else router.replace({ name: 'list', params: { base: activeBase.value, category: scopeCategory.value } });
 }
 function clearFilters() {
-  typeFilter.value = 'all'; levelFilter.value = 'all'; sort.value = 'name'; resetRouteSelection();
+  typeFilter.value = 'all'; sort.value = 'name'; resetRouteSelection();
 }
 function changePage(next: number) {
   page.value = Math.min(Math.max(next, 1), pageCount.value);
   const first = filtered.value[(page.value - 1) * 6];
   if (first) router.replace(targetFor(first));
 }
+function revealSelectedLevel(behavior: ScrollBehavior = 'smooth') {
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const strip = levelStrip.value;
+      const current = strip?.querySelector<HTMLElement>('[aria-current="true"]');
+      if (!strip || !current) return;
+      const currentLeft = current.getBoundingClientRect().left - strip.getBoundingClientRect().left + strip.scrollLeft;
+      const left = Math.max(0, currentLeft - (strip.clientWidth - current.offsetWidth) / 2);
+      if (behavior === 'auto') strip.scrollLeft = left;
+      else strip.scrollTo({ left, behavior });
+    });
+  });
+}
 function selectLevel(index: number) {
   selectedLevel.value = Math.min(Math.max(index, 0), Math.max(levels.value.length - 1, 0));
-  nextTick(() => levelStrip.value?.querySelector('[aria-current="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
+  revealSelectedLevel();
 }
 async function loadSelected(item?: CatalogItem) {
   const request = ++entityRequest;
@@ -172,7 +146,7 @@ async function loadSelected(item?: CatalogItem) {
     if (request !== entityRequest) return;
     entity.value = result;
     selectedLevel.value = Math.max(0, (Array.isArray(result.levels) ? result.levels.length : 1) - 1);
-    nextTick(() => levelStrip.value?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'end' }));
+    revealSelectedLevel('auto');
   } catch (reason) {
     if (request === entityRequest) entityError.value = reason instanceof Error ? reason.message : text('详情加载失败', 'Failed to load details');
   } finally {
@@ -181,9 +155,9 @@ async function loadSelected(item?: CatalogItem) {
 }
 
 watch([activeBase, scopeCategory, query], () => {
-  typeFilter.value = 'all'; levelFilter.value = 'all'; sort.value = 'name'; page.value = 1;
+  typeFilter.value = 'all'; sort.value = 'name'; page.value = 1;
 });
-watch([typeFilter, levelFilter, sort], () => { if (page.value > pageCount.value) page.value = 1; });
+watch([typeFilter, sort], () => { if (page.value > pageCount.value) page.value = 1; });
 watch(selectedItem, loadSelected, { immediate: true });
 onMounted(async () => { items.value = await loadCatalog(); loading.value = false; });
 </script>
@@ -208,7 +182,6 @@ onMounted(async () => { items.value = await loadCatalog(); loading.value = false
       </header>
       <div class="dashboard-filters" :aria-label="text('数据筛选', 'Data filters')">
         <SelectMenu v-model="typeFilter" :label="text('类型筛选', 'Filter by type')" :options="typeOptions" @change="resetRouteSelection" />
-        <SelectMenu v-model="levelFilter" class="level-filter" :label="text('大本营等级筛选', 'Filter by Town Hall level')" :options="levelOptions" @change="resetRouteSelection" />
         <SelectMenu v-model="sort" class="sort-filter" :label="text('排序方式', 'Sort order')" :options="sortOptions" @change="resetRouteSelection" />
         <button class="clear-filter" type="button" :aria-label="text('清空筛选', 'Clear filters')" @click="clearFilters"><Refresh :size="19" /><span>{{ text('清空', 'Clear') }}</span></button>
       </div>
@@ -243,12 +216,6 @@ onMounted(async () => { items.value = await loadCatalog(); loading.value = false
           <div ref="levelStrip" class="level-strip"><button v-for="(level, index) in levels" :key="index" type="button" :class="{ active: selectedLevel === index }" :aria-current="selectedLevel === index ? 'true' : undefined" @click="selectLevel(index)">{{ level.level ?? index + 1 }}</button></div>
           <button type="button" :disabled="selectedLevel === levels.length - 1" :aria-label="text('下一个等级', 'Next level')" @click="selectLevel(selectedLevel + 1)"><ChevronRight :size="20" /></button>
         </div>
-        <section class="compact-stats">
-          <h3>{{ levels.length ? `${text('等级', 'Level')} ${activeLevel?.level ?? selectedLevel + 1} ${text('数据', 'data')}` : text('基础数据', 'Base data') }}</h3>
-          <div v-if="coreStats.length" class="core-stat-list"><div v-for="stat in coreStats" :key="stat.key" class="core-stat"><component :is="stat.icon" :size="21" aria-hidden="true" /><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong></div></div>
-          <DataFields v-if="activeLevel" :value="activeLevel" :excluded="priorityKeys" />
-        </section>
-        <details class="base-data-panel"><summary><CircleInfo :size="19" aria-hidden="true" />{{ text('查看基础属性', 'View base attributes') }}</summary><DataFields :value="entity" /></details>
       </div>
     </aside>
   </div>

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Globe, Search3 } from '../icons';
 import { useLanguage } from '../composables/useLanguage';
+import GithubMark from './GithubMark.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -35,7 +36,7 @@ watch(() => route.query.q, (value) => { query.value = String(value || ''); });
         <button class="language-option" :class="{ active: language === 'zh-CN' }" type="button" aria-label="切换为中文" @click="setLanguage('zh-CN')">中文</button>
         <button class="language-option" :class="{ active: language === 'en' }" type="button" aria-label="Switch to English" @click="setLanguage('en')">English</button>
       </div>
-      <a class="github-link" href="https://github.com/xxhh0822/clashdata" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a class="github-link" href="https://github.com/xxhh0822/clashdata" target="_blank" rel="noopener noreferrer" :aria-label="text('在 GitHub 上查看项目', 'View project on GitHub')" :title="text('在 GitHub 上查看项目', 'View project on GitHub')"><GithubMark /></a>
     </div>
   </header>
 </template>
