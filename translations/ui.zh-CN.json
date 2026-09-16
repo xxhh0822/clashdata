@@ -1,0 +1,38 @@
+{
+  "base": {
+    "home": "家乡村庄",
+    "builder": "建筑大师基地",
+    "clan-capital": "部落都城",
+    "magic-items": "魔法物品",
+    "clan": "部落",
+    "achievements": "成就",
+    "ranked-battles": "排位战",
+    "season-pass": "赛季通行证"
+  },
+  "category": {
+    "troop": "兵种",
+    "defense": "防御建筑",
+    "crafted-defense": "组合防御",
+    "spell": "法术",
+    "hero": "英雄",
+    "hero-equipment": "英雄装备",
+    "pet": "战宠",
+    "guardian": "守护者",
+    "siege-machine": "攻城机器",
+    "resource-building": "资源建筑",
+    "army-building": "军队建筑",
+    "army": "军队建筑",
+    "other-building": "其他建筑",
+    "other": "其他建筑",
+    "research": "研究建筑",
+    "resource": "资源建筑",
+    "trap": "陷阱",
+    "wall": "城墙",
+    "town-hall": "大本营",
+    "builder-hall": "建筑大师大本营",
+    "league": "联赛",
+    "magic-item": "魔法物品",
+    "achievement": "成就",
+    "season-pass": "赛季通行证"
+  }
+}
