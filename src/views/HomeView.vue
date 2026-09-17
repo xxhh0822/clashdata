@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router';
 import {
-  BookOpen, Castle, ChartBar, ChevronLeft, ChevronRight, Flask, Grid, Home, Medal,
+  BookOpen, Castle, ChartBar, ChevronLeft, ChevronRight, Flask, Home, Medal,
   Refresh, ShieldStar,
 } from '../icons';
 import { assetUrl, loadCatalog, loadEntity } from '../data';
@@ -26,6 +26,7 @@ const page = ref(1);
 const selectedLevel = ref(0);
 const levelStrip = ref<HTMLElement>();
 let entityRequest = 0;
+const PAGE_SIZE = 12;
 
 const { language, translate, baseName, categoryName, text } = useLanguage();
 const sections = [
@@ -68,8 +69,8 @@ const filtered = computed(() => {
     ? (b.maxLevel || 0) - (a.maxLevel || 0)
     : (language.value === 'zh-CN' ? a.nameZh.localeCompare(b.nameZh, 'zh-CN') : a.nameEn.localeCompare(b.nameEn)));
 });
-const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / 6)));
-const pageItems = computed(() => filtered.value.slice((page.value - 1) * 6, page.value * 6));
+const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)));
+const pageItems = computed(() => filtered.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE));
 const routedItem = computed(() => {
   const searchKey = String(route.query.item || '');
   if (isSearch.value && searchKey) return items.value.find((item) => item.key === searchKey);
@@ -96,11 +97,6 @@ const displayImage = computed(() => {
   return selectedItem.value?.icon ? assetUrl(selectedItem.value.icon) : '';
 });
 
-const panelTitle = computed(() => isSearch.value ? text(`“${query.value}”的搜索结果`, `Results for “${query.value}”`) : baseName(activeBase.value));
-const panelDescription = computed(() => isSearch.value
-  ? text('匹配中文、英文名称和数据 ID', 'Matching names and data IDs')
-  : text('收录全面的兵种、建筑、法术与英雄数据', 'Troops, buildings, spells and heroes in one place'));
-
 function targetFor(item: CatalogItem): RouteLocationRaw {
   if (isSearch.value) return { name: 'search', query: { q: query.value, item: item.key } };
   return { name: 'detail', params: { base: activeBase.value, category: scopeCategory.value, id: item.id } };
@@ -115,7 +111,7 @@ function clearFilters() {
 }
 function changePage(next: number) {
   page.value = Math.min(Math.max(next, 1), pageCount.value);
-  const first = filtered.value[(page.value - 1) * 6];
+  const first = filtered.value[(page.value - 1) * PAGE_SIZE];
   if (first) router.replace(targetFor(first));
 }
 function revealSelectedLevel(behavior: ScrollBehavior = 'smooth') {
@@ -176,10 +172,6 @@ onMounted(async () => { items.value = await loadCatalog(); loading.value = false
     </aside>
 
     <section class="catalog-panel">
-      <header class="catalog-heading">
-        <div><span class="eyebrow">CLASH DATA</span><h1>{{ panelTitle }}</h1><p>{{ panelDescription }}</p></div>
-        <span class="result-count"><Grid :size="17" aria-hidden="true" />{{ filtered.length }}</span>
-      </header>
       <div class="dashboard-filters" :aria-label="text('数据筛选', 'Data filters')">
         <SelectMenu v-model="typeFilter" :label="text('类型筛选', 'Filter by type')" :options="typeOptions" @change="resetRouteSelection" />
         <SelectMenu v-model="sort" class="sort-filter" :label="text('排序方式', 'Sort order')" :options="sortOptions" @change="resetRouteSelection" />

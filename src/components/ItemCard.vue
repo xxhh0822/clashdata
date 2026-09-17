@@ -22,9 +22,11 @@ const image = computed(() => assetUrl(props.item.thumbnail || props.item.icon));
       <span v-if="item.maxLevel" class="level-badge">Lv. {{ item.maxLevel }}</span>
     </div>
     <div class="item-copy">
-      <h3>{{ name }}</h3>
+      <div class="item-title-row">
+        <h3>{{ name }}</h3>
+        <span class="item-category">{{ categoryName(item.category) }}</span>
+      </div>
       <p v-if="language === 'zh-CN' && item.nameZh !== item.nameEn">{{ item.nameEn }}</p>
-      <span class="item-category">{{ categoryName(item.category) }}</span>
     </div>
   </RouterLink>
 </template>
